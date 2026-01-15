@@ -1,0 +1,14 @@
+# - Config file for the torque_sensor_ros package
+# It defines the following variables
+#  torque_sensor_ros_INCLUDE_DIRS - include directories for FooBar
+#  torque_sensor_ros_LIBRARIES    - libraries to link against
+#  torque_sensor_ros_EXECUTABLE   - the bar executable
+
+set(torque_sensor_ros_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
+
+# Our library dependencies (contains definitions for IMPORTED targets)
+include("${torque_sensor_ros_DIR}/export_torque_sensor_ros.cmake")
+
+# These are IMPORTED targets created by torque_sensor_rosTargets.cmake
+
+

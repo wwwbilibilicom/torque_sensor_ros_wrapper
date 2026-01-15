@@ -1,0 +1,3 @@
+[submodule "3rdparty/torque_sensor_serial"]
+	path = 3rdparty/torque_sensor_serial
+	url = https://github.com/wwwbilibilicom/torque_sensor_serial.git
