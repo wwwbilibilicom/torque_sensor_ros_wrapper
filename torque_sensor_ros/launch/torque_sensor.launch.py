@@ -32,7 +32,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'publish_rate',
-            default_value='100.0',
+            default_value='1000.0',
             description='Rate at which to publish torque data (Hz)'
         ),
 

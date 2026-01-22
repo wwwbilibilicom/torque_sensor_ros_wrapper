@@ -15,14 +15,39 @@ using namespace std::chrono_literals;
 
 namespace torque_sensor_ros {
 
+class FrequencyCaculator {
+public:
+    FrequencyCaculator() {
+        start_ = std::chrono::high_resolution_clock::now();
+    }
+
+    void sampleFrequency() {
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start_);
+        start_ = end;
+        if (duration.count() > 0) {
+            frequency_hz_ = 1e6 / duration.count();
+        }
+    }
+
+	double getFrequency() const {
+		return frequency_hz_;
+	}
+
+
+	private:
+    std::chrono::high_resolution_clock::time_point start_;
+	double frequency_hz_ = 0.0;
+};
+
 class TorqueSensorNode : public rclcpp::Node {
 public:
   TorqueSensorNode() : Node("torque_sensor_node") {
     // Declare parameters with default values
     this->declare_parameter<std::string>("port_name", "/dev/serial/by-id/usb-Hiker_sudio_YK_COM_Port_6D7816855250Port-if00");
-    this->declare_parameter<int>("baudrate", 256000);
+    this->declare_parameter<int>("baudrate", 921600);
     this->declare_parameter<std::string>("frame_id", "torque_sensor_link");
-    this->declare_parameter<double>("publish_rate", 100.0); // Hz
+    this->declare_parameter<double>("publish_rate", 1000.0); // Hz
     this->declare_parameter<std::string>("sensor_type", "RANGE_30NM"); // RANGE_30NM or RANGE_100NM
     this->declare_parameter<float>("zero_voltage", 5.0f);
     this->declare_parameter<float>("max_voltage", 10.0f);
@@ -67,7 +92,7 @@ public:
 
     // Publishers - Using ~/torque makes it private to the node's namespace
     wrench_pub_ = this->create_publisher<geometry_msgs::msg::WrenchStamped>("~/torque", rclcpp::SensorDataQoS());
-    
+
     // Timer for polling and publishing
     auto period = std::chrono::duration<double>(1.0 / publish_rate);
     timer_ = this->create_wall_timer(period, std::bind(&TorqueSensorNode::timer_callback, this));
@@ -80,6 +105,7 @@ public:
   }
 
 private:
+  FrequencyCaculator freqsampler;
   void timer_callback() {
     if (!sensor_) return;
 
@@ -96,23 +122,22 @@ private:
         return;
     }
 
-    bool got_new_data = false;
-    for(int i=0; i<10; ++i) { 
-        if(sensor_->update()) {
-            got_new_data = true;
-        } else {
-            break; 
-        }
-    }
-
-    if (got_new_data || sensor_->isConnected()) {
-        float torque = sensor_->getTorque();
-        auto msg = geometry_msgs::msg::WrenchStamped();
-        msg.header.stamp = this->now();
-        msg.header.frame_id = frame_id_;
-        msg.wrench.torque.z = torque;
-        wrench_pub_->publish(msg);
-    }
+    // Since the driver now uses a background thread, we just grab the latest torque
+    // value and publish it. The timer dictates the publish rate.
+    float torque = sensor_->getTorque();
+    
+    auto msg = geometry_msgs::msg::WrenchStamped();
+    msg.header.stamp = this->now();
+    msg.header.frame_id = frame_id_;
+    msg.wrench.torque.z = torque;
+    // Publish frequency in force.x for diagnostics
+    msg.wrench.force.x = freqsampler.getFrequency();
+    msg.wrench.force.y = sensor_->getFrequency();
+    
+    wrench_pub_->publish(msg);
+    
+    // Sample frequency after successful publish
+    freqsampler.sampleFrequency();
   }
 
   std::unique_ptr<torque_sensor::TorqueSensor> sensor_;
