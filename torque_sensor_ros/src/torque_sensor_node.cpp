@@ -44,8 +44,8 @@ class TorqueSensorNode : public rclcpp::Node {
 public:
   TorqueSensorNode() : Node("torque_sensor_node") {
     // Declare parameters with default values
-    this->declare_parameter<std::string>("port_name", "/dev/serial/by-id/usb-Hiker_sudio_YK_COM_Port_6D7816855250Port-if00");
-    this->declare_parameter<int>("baudrate", 921600);
+    this->declare_parameter<std::string>("port_name", "/dev/ttyACM0");
+    this->declare_parameter<int>("baudrate", 256000);
     this->declare_parameter<std::string>("frame_id", "torque_sensor_link");
     this->declare_parameter<double>("publish_rate", 1000.0); // Hz
     this->declare_parameter<std::string>("sensor_type", "RANGE_30NM"); // RANGE_30NM or RANGE_100NM
