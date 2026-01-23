@@ -51,6 +51,7 @@ public:
     this->declare_parameter<std::string>("sensor_type", "RANGE_30NM"); // RANGE_30NM or RANGE_100NM
     this->declare_parameter<float>("zero_voltage", 5.0f);
     this->declare_parameter<float>("max_voltage", 10.0f);
+    this->declare_parameter<int>("sign", -1);
 
     // Get parameters
     std::string port_name = this->get_parameter("port_name").as_string();
@@ -60,6 +61,7 @@ public:
     std::string type_str = this->get_parameter("sensor_type").as_string();
     float zero_voltage = this->get_parameter("zero_voltage").as_double();
     float max_voltage = this->get_parameter("max_voltage").as_double();
+    sign_ = this->get_parameter("sign").as_int();
 
     // Map string type to enum
     torque_sensor::TorqueSensor::TorqueSensorType type;
@@ -106,6 +108,7 @@ public:
 
 private:
   FrequencyCaculator freqsampler;
+  int sign_;
   void timer_callback() {
     if (!sensor_) return;
 
@@ -129,7 +132,7 @@ private:
     auto msg = geometry_msgs::msg::WrenchStamped();
     msg.header.stamp = this->now();
     msg.header.frame_id = frame_id_;
-    msg.wrench.torque.z = torque;
+    msg.wrench.torque.z = sign_ * torque;
     // Publish frequency in force.x for diagnostics
     msg.wrench.force.x = freqsampler.getFrequency();
     msg.wrench.force.y = sensor_->getFrequency();
