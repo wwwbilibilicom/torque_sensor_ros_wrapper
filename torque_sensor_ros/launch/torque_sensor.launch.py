@@ -7,12 +7,12 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'port_name',
-            default_value='/dev/ttyUSB0',
+            default_value='/dev/ttyACM0',
             description='Serial port for the torque sensor'
         ),
         DeclareLaunchArgument(
             'baudrate',
-            default_value='256000',
+            default_value='921600',
             description='Baudrate for serial communication'
         ),
         DeclareLaunchArgument(

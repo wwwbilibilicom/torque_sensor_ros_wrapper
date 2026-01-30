@@ -136,6 +136,7 @@ private:
     // Publish frequency in force.x for diagnostics
     msg.wrench.force.x = freqsampler.getFrequency();
     msg.wrench.force.y = sensor_->getFrequency();
+    msg.wrench.force.z = sensor_->getForce(); 
     
     wrench_pub_->publish(msg);
     
